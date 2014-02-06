@@ -1,0 +1,121 @@
+#!/bin/bash
+
+# ClamAVScript
+#
+# Copyright 2014, Andreas Ihrig (alias RoboMod)
+#
+# TODO: GPL v3
+#
+#
+# based on works of:
+#  - Devon Hillard (http://www.digitalsanctuary.com/tech-blog/debian/automated-clamav-virus-scanning.html)
+#  - Jochen Engelhardt (http://netz10.de/2011/06/22/cronjob-clamav-email/)
+
+# vars
+private_clamscan_dir="$HOME/.clamscan"
+quarantine="$private_clamscan_dir/quarantine"
+scan_dir="$HOME"
+
+# strings
+name="ClamAVScript"
+version="v0.1"
+
+# functions
+function echo_done () {
+  printf "%-30s %s\n" " " [done]
+}
+
+# take scan directory from arguments if given, else ask user
+if [ $# != "0" ]; then
+  if [ ! -d $1 ]; then
+    echo "Given path is no directory or doesn't exist"
+    exit 1
+  fi
+  scan_dir=$1
+else
+  # ask for home, root or other directory (if no argument given)
+  scan_dir=$(zenity --list --radiolist --column="" --column="path" --column="discription" --title="$name $version" --width=600 --height=300 \
+    --text="Choose directory to scan:" \
+      'TRUE' "~" "users home directory" \
+      'FALSE' "/" "system root direcotry" \
+      'FALSE' "*" "choose another directory"
+  )
+  # exit if dialog was canceld
+  if [ $? != 0 ] ; then
+    echo "No directory chosen"
+    exit 1
+  fi
+
+  # ask for other directory if option chosen
+  case $scan_dir in
+  "~") 	scan_dir=$HOME
+	;;
+  "*") 	scan_dir=$(zenity --file-selection --title="$name $version" --text="Choose directory to scan:" --filename="/" --directory) 
+	# exit if dialog was canceld
+	if [ $? != 0 ] ; then
+	  echo "No directory chosen"
+	  exit 1
+	fi
+	;;
+  esac
+fi
+echo "Chosen scan directory: $scan_dir"
+
+# check if /var/log/clamscan and ~/$quarantine exists
+echo -n "Checking necessary directories "
+#if [ ! -d /var/log/clamscan ] ; then
+#  mkdir /var/log/clamscan
+#fi
+#echo "" > /var/log/clamscan/scan.log
+if [ ! -d $private_clamscan_dir ] ; then
+  mkdir $private_clamscan_dir
+fi
+if [ ! -d $quarantine ] ; then
+  mkdir $quarantine
+fi
+echo "" > $private_clamscan_dir/scan.log
+echo_done
+
+# start zenity output (for virus db update and counting files)
+exec 3> >(zenity --progress --title="$name $version" --pulsate --auto-close --auto-kill --no-cancel --width=400)
+
+# update virus database
+echo "# Updating virus database ..." >&3
+echo -n "Updating virus database"
+freshclam --quiet --datadir=$private_clamscan_dir
+echo 0 >&3
+echo_done
+
+# count files to scan
+echo "# Counting files to scan ..." >&3
+echo -n "Counting files to scan "
+files_count=`expr $(find $scan_dir -type f| wc -l) + $(ls -alR $scan_dir | grep ^l | wc -l)`
+echo 100 >&3
+echo -n 3>&-
+echo_done
+
+# scan and show progress
+echo -n "Scanning files with ClamAV "
+(
+  echo "# Starting ClamAV ..."
+  clamscan -r --log=/var/log/clamscan/scan.log --exclude-dir="$quarantine" --move="$quarantine" "$scan_dir" | awk -v fc=$files_count -v end=0 '
+  /^$/ { exit }
+  { print "# Scanning file: " NR " of " fc "\n" NR/fc*100 }
+  '
+) | zenity --progress --title="$name $version" --auto-close --auto-kill --no-cancel --width=400
+echo_done
+
+# generate results
+echo -n "Retrieving results "
+feed_back=`tail -n +0 /var/log/clamscan/scan.log | awk '/^[a-zA-Z].*$/ { print $0 }'`
+infected_files=`tail -n +0 /var/log/clamscan/scan.log | awk '/^$/ { exit }
+/^.*Infected$/ { print $0 }'`
+if [ -n $infected_files ] ; then
+  infected_files="None"
+fi
+echo_done
+
+# show results to commandline and to window
+echo -e "ClamAV results\n\n$feed_back\n\nInfected files:\n$infected_files\n\n(All infected files are moved to $quarantine.)"
+zenity --info --title="$name $version" --width=600 --height=600 \
+  --text="ClamAV results\n\n$feed_back\n\nInfected files:\n$infected_files\n\n(All infected files are moved to $quarantine.)"
