@@ -1,15 +1,28 @@
 #!/bin/bash
 
-# ClamAVScript
+# ClamAVScript - simple script to run clamav scans with some gui elements
+# Copyright (C) 2014, Andreas Ihrig (alias RoboMod)
 #
-# Copyright 2014, Andreas Ihrig (alias RoboMod)
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
-# TODO: GPL v3
 #
-#
-# based on works of:
+# based on work of:
 #  - Devon Hillard (http://www.digitalsanctuary.com/tech-blog/debian/automated-clamav-virus-scanning.html)
 #  - Jochen Engelhardt (http://netz10.de/2011/06/22/cronjob-clamav-email/)
+#  - utrescu (http://openclipart.org/detail/168159/virus-by-utrescu)
+#  - libberry (http://openclipart.org/detail/188650/search-ideogram-by-libberry-188650)
+#  - Francesco 'Architetto' Rollandin (http://openclipart.org/detail/26838/architetto----finestra-by-anonymous)
 
 # vars
 private_clamscan_dir="$HOME/.clamscan"
