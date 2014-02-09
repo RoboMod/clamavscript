@@ -1,12 +1,9 @@
 [Desktop Entry]
-Categories=System
+Categories=System;Security;
 Comment[de]=Simple clamav script using Zenity
 Comment=Simple clamav script using Zenity
 Exec=clamavscript
-GenericName[de]=
-GenericName=
 Icon=clamavscript60x60.png
-MimeType=
 Name[de]=ClamAVScript
 Name=ClamAVScript
 Path=
@@ -18,5 +15,3 @@ Type=Application
 Version=0.1a
 X-DBUS-ServiceName=
 X-DBUS-StartupType=none
-X-KDE-SubstituteUID=false
-X-KDE-Username=
