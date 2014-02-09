@@ -12,6 +12,6 @@ Terminal=false
 TerminalOptions=
 TryExec=clamavscript
 Type=Application
-Version=0.1a
+Version=0.1b4
 X-DBUS-ServiceName=
 X-DBUS-StartupType=none
